@@ -75,7 +75,7 @@ python baseline/main.py
 - Transcriptions: Stored in temp_chunks/ as text files.
 - Corrected Transcriptions: Saved in corrected_transcriptions/.
 ### Workflow Overview
-<table border="1" cellspacing="0" cellpadding="8">
+<table>
   <thead>
     <tr>
       <th>Step</th>
@@ -114,10 +114,11 @@ python baseline/main.py
 ```bash
 nlp-ger_hf/
 │
-├── audio_files/                # Input audio files
+├── audio_folder/               # Input audio files
 ├── temp_chunks/                # Temporary processed chunks
 ├── corrected_transcriptions/   # Corrected transcription output
 ├── baseline/
+│   ├── audio_processing        # Important script functions
 │   └── main.py                 # Main script
 └── requirements.txt            # Python dependencies
 ```
