@@ -8,7 +8,7 @@ if __name__ == "__main__":
     
     # Ensure that the audio folder exists
     if not os.path.exists(audio_folder):
-        print(f"Ordner '{audio_folder}' existiert nicht.")
+        print(f"Folder '{audio_folder}' does not exist.")
         exit(1)
 
     # Loop 1: Convert audio files to WAV format
