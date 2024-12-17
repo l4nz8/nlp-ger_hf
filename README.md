@@ -118,6 +118,7 @@ nlp-ger_hf/
 ├── temp_chunks/                # Temporary processed chunks
 ├── corrected_transcriptions/   # Corrected transcription output
 ├── baseline/
+│   ├── audio_processing        # Important script functions
 │   └── main.py                 # Main script
 └── requirements.txt            # Python dependencies
 ```
