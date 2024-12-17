@@ -114,7 +114,7 @@ python baseline/main.py
 ```bash
 nlp-ger_hf/
 │
-├── audio_files/                # Input audio files
+├── audio_folder/               # Input audio files
 ├── temp_chunks/                # Temporary processed chunks
 ├── corrected_transcriptions/   # Corrected transcription output
 ├── baseline/
