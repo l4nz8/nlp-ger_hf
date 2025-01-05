@@ -1,5 +1,6 @@
 import subprocess
 import os
+import torch
 from pydub import AudioSegment
 from huggingsound import SpeechRecognitionModel
 from transformers import pipeline
@@ -34,7 +35,15 @@ def ensure_wav_format(audio_folder):
     Checks and converts audio files in the specified folder to WAV format.
     Files are replaced if they are not already in WAV format.
     """
+
+    ignored_files = {".gitkeep"}  # Set of files to ignore
+
     for file_name in os.listdir(audio_folder):
+        # Skip ignored files
+        if file_name in ignored_files:
+            print(f"Skipping ignored file: {file_name}")
+            continue
+        
         file_path = os.path.join(audio_folder, file_name)
         
         # Edit files only
@@ -57,11 +66,11 @@ def ensure_wav_format(audio_folder):
                 ]
                 
                 # Execute FFmpeg
+                print(f"Running command: {' '.join(command)}")
                 subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
                 
                 # Delete old file and rename new file
                 os.remove(file_path)
-                os.rename(new_file_path, file_path)
                 print(f"File {file_name} was successfully converted and replaced.")
             else:
                 print(f"File {file_name} is already in WAV format. No conversion required.")
@@ -109,13 +118,14 @@ def split_audio_into_chunks(audio_folder, temp_folder, chunk_length_ms=120000):
         os.makedirs(temp_folder)
         print(f"Temp folder '{temp_folder}' was created.")
     
-    # Load model
-    model = SpeechRecognitionModel("jonatasgrosman/wav2vec2-large-xlsr-53-german")
+    # Load model and ensure GPU usage
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model = SpeechRecognitionModel("jonatasgrosman/wav2vec2-large-xlsr-53-german", device=device)
 
     for file_name in os.listdir(audio_folder):
         file_path = os.path.join(audio_folder, file_name)
         
-        # Edit WAV files only
+        # Process only WAV files
         if file_name.lower().endswith(".wav") and os.path.isfile(file_path):
             print(f"Split file {file_name} into chunks...")
             
@@ -133,14 +143,18 @@ def split_audio_into_chunks(audio_folder, temp_folder, chunk_length_ms=120000):
                 print(f"Chunk {i+1} saved: {chunk_file_path}")
                 
                 # Voice isolation with DeepFilterNet
-                deepfilter_output = os.path.join(temp_folder, f"{os.path.splitext(chunk_file_name)[0]}_filtered.wav")
+                deepfilter_output = os.path.join(temp_folder, f"{os.path.splitext(chunk_file_name)[0]}_DeepFilterNet3.wav")
+                # deepfilter generates names with additional attachment "_DeepFilterNet3"
                 print(f"Isolate voices in {chunk_file_name} with DeepFilterNet...")
                 
                 command = [
-                    "deepfilter", "-i", chunk_file_path,  # Input chunks
-                    "-o", deepfilter_output               # Output file
+                    "deepfilter", chunk_file_path,          # Input chunks
+                    "-o", temp_folder                       # Output file
                 ]
-                subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+                result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                if result.returncode != 0:
+                    print(f"DeepFilterNet error: {result.stderr}")
+                    continue
                 
                 # Replace the original chunk with the filtered chunk
                 os.remove(chunk_file_path)
@@ -149,6 +163,7 @@ def split_audio_into_chunks(audio_folder, temp_folder, chunk_length_ms=120000):
                 
                 # Transcription of the chunks with wav2vec
                 print(f"Transcribe {chunk_file_name} with wav2vec...")
+                print(f"Processing chunk on device: {next(model.model.parameters()).device}") #cuda:0 = GPU
                 result = model.transcribe([chunk_file_path])
                 transcription = result[0]['transcription']
                 

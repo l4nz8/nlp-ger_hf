@@ -15,7 +15,7 @@ if __name__ == "__main__":
     ap.ensure_wav_format(audio_folder)
     
     # Loop 2: Normalize volume
-    ap.normalize_audio_loudness(audio_folder)
+    #ap.normalize_audio_loudness(audio_folder)
     
     # Loop 3: Split audio into 1-2 min. chunks, isolate and transcribe voices
     ap.split_audio_into_chunks(audio_folder, temp_folder)
